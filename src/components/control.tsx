@@ -6,8 +6,11 @@ import MicOnIcon from '@/assets/icons/mic-on.svg'
 import MicOffIcon from '@/assets/icons/mic-off.svg'
 import CamOnIcon from '@/assets/icons/cam-on.svg'
 import CamOffIcon from '@/assets/icons/cam-off.svg'
+import ShareIcon from '@/assets/icons/share.svg'
+import MessageIcon from '@/assets/icons/msg.svg'
+import EndIcon from '@/assets/icons/end.svg'
 import Image from 'next/image';
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/app-context";
 import { checkPermission, getDeviceList, mergeStream, requestAudio, requestVideo, splitStream } from "@/utils/utils";
 
@@ -29,7 +32,7 @@ type ControlProps = {
     onClick: (value: boolean) => void
 }
 
-const Control = ({contextMenu, defaultDevice, enable, icon, onChoose, onClick, size}: ControlProps) => {
+const Control = React.memo(({contextMenu, defaultDevice, enable, icon, onChoose, onClick, size}: ControlProps) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -56,16 +59,26 @@ const Control = ({contextMenu, defaultDevice, enable, icon, onChoose, onClick, s
             </div>}
         </div>
     )
-}
+})
 
 export default Control;
 
-export const MicControl = () => {
+const ControlButton = ({icon, onClick, className = ''}: {icon: string | StaticImport, onClick: () => void, className?: string}) => {
+    return <div onClick={onClick} className={`flex items-center justify-center size-12 cursor-pointer rounded-full bg-(--control-background-light) ${className}`}>
+            <Image src={icon} alt='m' className='aspect-square w-6'/>
+        </div>
+}
+
+type MediaControlType = {
+    size?: 'small' | 'large'
+}
+
+export const MicControl = ({size = 'small'}: MediaControlType) => {
     const {streamRef, mic, setMic, audioDevice, setAudioDevice} = useAppContext()!;
     const [micList, setMicList] = useState<{value: string, label: string}[]>();
     
     useEffect(() => {
-        checkPermission('microphone', setMic);
+        mic === undefined && checkPermission('microphone', setMic);
     }, [])
     useEffect(() => {
         if (mic && !micList) {
@@ -99,19 +112,17 @@ export const MicControl = () => {
                 setMic(false);
         }} onChoose={(id) => {
                 setAudioDevice(id);
-            }} enable={mic} size='small'/>
+            }} enable={mic} size={size}/>
         </>
     )
 }
 
-
-
-export const CamControl = () => {
+export const CamControl = ({size = 'small'}: MediaControlType) => {
     const {streamRef, cam, setCam, videoDevice, setVideoDevice} = useAppContext()!;
     const [camList, setCamList] = useState<{value: string, label: string}[]>();
     
     useEffect(() => {
-        checkPermission('camera', setCam);
+        cam === undefined && checkPermission('camera', setCam);
     }, [])
     useEffect(() => {
         if (cam && !camList) {
@@ -146,7 +157,25 @@ export const CamControl = () => {
                 setCam(false);
             }} onChoose={(id) => {
                 setVideoDevice(id);
-            }} enable={cam} size="small"/>
+            }} enable={cam} size={size}/>
         </>
+    )
+}
+
+export const ControlBar = () => {
+    return (
+        <div className="flex items-center gap-4 absolute left-1/2 -translate-x-1/2 bottom-4">
+            <MicControl size="large"/>
+            <CamControl size="large" />
+
+            <ControlButton icon={ShareIcon} onClick={() => {
+                    navigator.clipboard.writeText(window.location.href)
+                }} />
+            
+            <ControlButton icon={EndIcon} onClick={() => {
+                    window.location.href = '/';
+                    // window.location.reload();
+                }} className='w-16 !bg-(--control-background-disabled-light)'/>
+        </div>
     )
 }

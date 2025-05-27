@@ -21,7 +21,6 @@ export const checkPermission = (name: PermissionName, setState: (value: boolean 
 export const getDeviceList = async (videoOrAudio: "video" | "audio") => {
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        console.log({devices})
         const list = devices.filter(device => videoOrAudio === 'audio' ? device.kind === 'audioinput' : device.kind === 'videoinput');
         const deviceList: MediaDeviceInfo[] = [];
         list.forEach((info) => {
@@ -70,18 +69,23 @@ export const mergeStream = (ref: RefObject<MediaStream | null>, stream: MediaStr
         ref.current!.removeTrack(track);
       });
       ref.current.addTrack(stream.getVideoTracks()[0]);
+      ref.current.dispatchEvent(new MediaStreamTrackEvent('addtrack', {track: stream.getVideoTracks()[0]}));
     } else if (videoOrAudio === "audio") {
       ref.current.getAudioTracks().forEach(track => {
         track.stop();
         ref.current!.removeTrack(track);
       });
       ref.current.addTrack(stream.getAudioTracks()[0]);
+      ref.current.dispatchEvent(new MediaStreamTrackEvent('addtrack', {track: stream.getAudioTracks()[0]}));
     } else {
       ref.current.getTracks().forEach(track => {
         track.stop();
         ref.current!.removeTrack(track);
       });
-      ref.current = stream;
+      stream.getTracks().forEach(track => {
+        ref.current!.addTrack(track);
+        ref.current!.dispatchEvent(new MediaStreamTrackEvent('addtrack', {track}));
+      });
     }
   } else {
     ref.current = stream;
@@ -94,17 +98,26 @@ export const splitStream = (ref: RefObject<MediaStream | null>, videoOrAudio: 'v
       ref.current.getVideoTracks().forEach(track => {
         track.stop();
         ref.current!.removeTrack(track);
+        ref.current!.dispatchEvent(new MediaStreamTrackEvent('removetrack', {track}));
       });
     } else if (videoOrAudio === "audio") {
       ref.current.getAudioTracks().forEach(track => {
         track.stop();
         ref.current!.removeTrack(track);
+        ref.current!.dispatchEvent(new MediaStreamTrackEvent('removetrack', {track}));
       });
     } else {
       ref.current.getTracks().forEach(track => {
         track.stop();
         ref.current!.removeTrack(track);
+        ref.current!.dispatchEvent(new MediaStreamTrackEvent('removetrack', {track}));
       });
     }
   }
+}
+
+export const calculateGrid = (length: number) => {
+  const row = Math.floor(Math.sqrt(length));
+  const col = Math.ceil(length / row);
+  return {row, col};
 }
