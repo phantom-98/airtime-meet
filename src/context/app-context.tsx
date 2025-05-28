@@ -26,7 +26,8 @@ const AppContext = createContext<AppContextType | null>(null);
 
 const socket_host = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:8000';
 const peer_host = process.env.NEXT_PUBLIC_PEER_HOST || 'localhost';
-const peer_port = process.env.NEXT_PUBLIC_PEER_PORT || '9000'
+const peer_port = process.env.NEXT_PUBLIC_PEER_PORT || '9000';
+const peer_secure = process.env.NEXT_PUBLIC_PEER_SECURE || 'false';
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [name, setName] = useState('');
@@ -34,7 +35,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [cam, setCam] = useState<boolean>();
     const streamRef = useRef<MediaStream>(null);
     const socketRef = useRef<Socket>(io(socket_host))
-    const peerRef = useRef<Peer>(new Peer(v4(), { host: peer_host, port: parseInt(peer_port), secure: peer_host.startsWith('https') }));
+    const peerRef = useRef<Peer>(new Peer(v4(), { host: peer_host, port: parseInt(peer_port), secure: Boolean(peer_secure) }));
     const [audioDevice, setAudioDevice] = useState<string>('default');
     const [videoDevice, setVideoDevice] = useState<string>('default');
     const dummyStream = useRef<MediaStream | null>(null);
