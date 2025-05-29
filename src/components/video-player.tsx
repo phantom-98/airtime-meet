@@ -37,12 +37,15 @@ const VideoPlayer = React.memo(({name, call, isLocal = true, isCam, isMic}: Vide
                 </div>
             )}
             {!isMic ? (
-                isLocal ? null : (
+                // isLocal ? null : (
                     <div className="absolute top-4 right-4 size-8 rounded-full muted flex items-center justify-center">
                         <Image src={MutedIcon} alt="M" className="size-5"/>
                     </div>
-                )
-            ) : <div className={`absolute ${(isCam) ? 'top-4 right-4' : 'top-1/2 left-1/2 -translate-1/2'} size-fit rounded-full`}><VoiceDetector stream={isLocal ? localRef.current : stream.current} size={(isCam) ? 'small' : 'large'}/></div>}
+                // )
+            ) : <div className={`absolute ${(isCam) ? 'top-4 right-4' : 'top-1/2 left-1/2 -translate-1/2'} size-fit rounded-full`}>
+                <VoiceDetector stream={isLocal ? localRef.current : stream.current} size={(isCam) ? 'small' : 'large'}/>
+                {!isLocal && <Audio stream={stream.current} />}
+            </div>}
             <span className="absolute bottom-4 left-4 text-xl text-white font-semibold">{name}{isLocal ? ' (You)':''}</span>
         </div>
     )
@@ -72,5 +75,15 @@ const Video = React.memo(({stream, isLocal = true}: {stream: MediaStream | null,
         }
     }, [stream])
     
-    return <video ref={ref} className={`w-full h-full object-cover ${isLocal ? 'rotate-y-180':''}`} muted={isLocal} autoPlay/>
+    return <video ref={ref} className={`w-full h-full object-cover ${isLocal ? 'rotate-y-180':''}`} muted autoPlay/>
+})
+
+const Audio = React.memo(({stream}: {stream: MediaStream | null}) => {
+    const ref = useRef<HTMLAudioElement>(null);
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.srcObject = stream
+        }
+    }, [stream])
+    return <audio ref={ref} className="hidden" autoPlay />
 })
