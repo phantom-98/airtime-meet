@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation"
 import Button from "./button"
 import Input from "./input"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { VideoPreview } from "./video-player"
 import { CamControl, MicControl } from "./control"
 import { useAppContext } from "@/context/app-context"
@@ -16,24 +16,28 @@ type LobbyProps = {
 const Lobby = ({isCreate = true}: LobbyProps) => {
     const router = useRouter();
     const [spinner, setSpinner] = useState(false)
-    const {setName, socketRef} = useAppContext()!
-    const [text, setText] = useState('')
+    const {setName, socketRef, peerRef} = useAppContext()!
+    const [text, setText] = useState('');
 
     useEffect(() => {
-        socketRef.current.on('onCreate', (link: string) => {
+        socketRef.current?.on('onCreate', (link: string) => {
             onCreate(link);
         })
-    }, [])
+    }, [socketRef.current])
+
+    const connected = useMemo(() => {
+        return socketRef.current !== null && peerRef.current !== null;
+    }, [socketRef.current, peerRef.current])
 
     const onCreate = (link: string) => {
         setSpinner(false);
-        router.push('/' + link);
+        router.push('/' + link, {scroll: true});
     }
 
     const createRoom = () => {
         setName(text);
         setSpinner(true);
-        socketRef.current.emit('create');
+        socketRef.current?.emit('create');
     }
     const joinRoom = () => {
         setName(text);
@@ -52,7 +56,7 @@ const Lobby = ({isCreate = true}: LobbyProps) => {
                 <div className="flex flex-col items-center gap-8">
                     <h2 className="text-2xl">What's your name?</h2>
                     <Input text={text} onChange={setText}/>
-                    <Button text={isCreate ? "Create Room" : "Join Room"} spinner={spinner} disabled={!text || spinner} onClick={isCreate ? createRoom : joinRoom}/>
+                    <Button text={isCreate ? "Create Room" : "Join Room"} spinner={spinner} disabled={!text || !connected || spinner} onClick={isCreate ? createRoom : joinRoom}/>
                 </div>
                 <Image src={Brand} alt="airtime" className="w-md max-w-3/5 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 lg:mb-10"/>
             </div>

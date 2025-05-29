@@ -11,6 +11,9 @@ const Room = () => {
     const link = usePathname().slice(1);
     const [time, setTime] = useState('');
     const { cam, mic, name, streamRef, socketRef, peerRef, getEmptyTrack, getFullStream } = useAppContext()!;
+    if (socketRef.current === null || peerRef.current === null) {
+        return null
+    }
     const mediaState = useRef({cam, mic});
     const [users, setUsers] = useState<{[key: string]: UserType}>({
         'local': {
@@ -25,15 +28,15 @@ const Room = () => {
     const onJoin = (list: {name: string, peerId: string}[]) => {
         setUsers(prev => {
             list.map(user => {
-                const call = peerRef.current.call(user.peerId, getFullStream())
+                const call = peerRef.current!.call(user.peerId, getFullStream())
                 prev[user.peerId] = {name: user.name, call, isCam: false, isMic: false}
             })
             return {...prev};
         })
         
         setTimeout(() => {
-            socketRef.current.emit('cam', peerRef.current.id, !!mediaState.current.cam);
-            socketRef.current.emit('mic', peerRef.current.id, !!mediaState.current.mic);
+            socketRef.current!.emit('cam', peerRef.current!.id, !!mediaState.current.cam);
+            socketRef.current!.emit('mic', peerRef.current!.id, !!mediaState.current.mic);
         }, 1000)
     }
     const onAdd = (name: string, peerId: string) => {
@@ -43,8 +46,8 @@ const Room = () => {
         })
         
         setTimeout(() => {
-            socketRef.current.emit('cam', peerRef.current.id, !!mediaState.current.cam);
-            socketRef.current.emit('mic', peerRef.current.id, !!mediaState.current.mic);
+            socketRef.current!.emit('cam', peerRef.current!.id, !!mediaState.current.cam);
+            socketRef.current!.emit('mic', peerRef.current!.id, !!mediaState.current.mic);
         }, 1000)
     }
     const onLeft = (peerId: string) => {
@@ -76,7 +79,7 @@ const Room = () => {
                         }
                     })
                 } else {
-                    prev[peerId].call = peerRef.current.call(
+                    prev[peerId].call = peerRef.current!.call(
                         peerId, 
                         new MediaStream(["audio", "video"].map(key => {
                             if (tracks[key]) {
@@ -117,7 +120,7 @@ const Room = () => {
             prev['local'].isCam = !!cam;
             return {...prev}
         })
-        socketRef.current.emit('cam', peerRef.current.id, !!cam);
+        socketRef.current!.emit('cam', peerRef.current!.id, !!cam);
         mediaState.current.cam = cam;
     }, [cam])
 
@@ -133,7 +136,7 @@ const Room = () => {
             prev['local'].isMic = !!mic;
             return {...prev}
         })
-        socketRef.current.emit('mic', peerRef.current.id, !!mic);
+        socketRef.current!.emit('mic', peerRef.current!.id, !!mic);
         mediaState.current.mic = mic;
     }, [mic])
 
@@ -142,13 +145,13 @@ const Room = () => {
             setTime(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase());
         }, 1000);
 
-        socketRef.current.on('onJoin', (userList) => onJoin(userList));
-        socketRef.current.on('onAdd', (name, peerId) => onAdd(name, peerId));
-        socketRef.current.on('left', (peerId) => onLeft(peerId));
-        socketRef.current.on('onCam', (peerId, value) => onCam(peerId, value));
-        socketRef.current.on('onMic', (peerId, value) => onMic(peerId, value));
-        socketRef.current.emit('join', link, name, peerRef.current.id);
-        peerRef.current.on('call', (call) => {
+        socketRef.current!.on('onJoin', (userList) => onJoin(userList));
+        socketRef.current!.on('onAdd', (name, peerId) => onAdd(name, peerId));
+        socketRef.current!.on('left', (peerId) => onLeft(peerId));
+        socketRef.current!.on('onCam', (peerId, value) => onCam(peerId, value));
+        socketRef.current!.on('onMic', (peerId, value) => onMic(peerId, value));
+        socketRef.current!.emit('join', link, name, peerRef.current!.id);
+        peerRef.current!.on('call', (call) => {
             setUsers(prev => {
                 prev[call.peer].call = call;
                 return {...prev};

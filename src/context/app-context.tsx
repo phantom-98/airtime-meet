@@ -16,8 +16,8 @@ type AppContextType = {
     videoDevice: string,
     setVideoDevice: Dispatch<SetStateAction<string>>,
     streamRef: RefObject<MediaStream | null>,
-    socketRef: RefObject<Socket>,
-    peerRef: RefObject<Peer>,
+    socketRef: RefObject<Socket | null>,
+    peerRef: RefObject<Peer | null>,
     getEmptyTrack: (videoOrAudio: string) => MediaStreamTrack,
     getFullStream: () => MediaStream
 }
@@ -34,8 +34,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [mic, setMic] = useState<boolean>();
     const [cam, setCam] = useState<boolean>();
     const streamRef = useRef<MediaStream>(null);
-    const socketRef = useRef<Socket>(io(socket_host))
-    const peerRef = useRef<Peer>(new Peer(v4(), { host: peer_host, port: parseInt(peer_port), secure: Boolean(peer_secure) }));
+    const socketRef = useRef<Socket>(null)
+    const peerRef = useRef<Peer>(null);
     const [audioDevice, setAudioDevice] = useState<string>('default');
     const [videoDevice, setVideoDevice] = useState<string>('default');
     const dummyStream = useRef<MediaStream | null>(null);
@@ -69,6 +69,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     useEffect(() => {
+        if (!socketRef.current || socketRef.current.disconnected) {
+            socketRef.current = io(socket_host)
+        }
+        if (!peerRef.current || peerRef.current.disconnected) {
+            peerRef.current = new Peer(v4(), {host: peer_host, port: parseInt(peer_port), secure: Boolean(peer_secure)})
+        }
         genDummyStream();
     }, [])
 
