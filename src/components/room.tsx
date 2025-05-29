@@ -11,9 +11,6 @@ const Room = () => {
     const link = usePathname().slice(1);
     const [time, setTime] = useState('');
     const { cam, mic, name, streamRef, socketRef, peerRef, getEmptyTrack, getFullStream } = useAppContext()!;
-    if (socketRef.current === null || peerRef.current === null) {
-        return null
-    }
     const mediaState = useRef({cam, mic});
     const [users, setUsers] = useState<{[key: string]: UserType}>({
         'local': {
@@ -141,6 +138,15 @@ const Room = () => {
     }, [mic])
 
     useEffect(() => {
+        if (streamRef.current) {
+            streamRef.current.onaddtrack = (ev) => {
+                const track = ev.track;
+                startTracks({[track.kind === 'videoinput' ? 'video' : 'audio']: track}, [track.kind === 'videoinput' ? 'video' : 'audio'])
+            }
+        }
+    }, [streamRef.current])
+
+    useEffect(() => {
         const timer = setInterval(() => {
             setTime(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase());
         }, 1000);
@@ -162,6 +168,11 @@ const Room = () => {
             clearInterval(timer);
         }
     }, [])
+
+    
+    if (socketRef.current === null || peerRef.current === null) {
+        return null
+    }
 
     return (
         <div className="w-screen h-screen bg-(--room-background) flex flex-col justify-between">

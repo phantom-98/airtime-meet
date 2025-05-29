@@ -101,17 +101,23 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
             disabled: MicOffIcon
         }} onClick={async (on) => {
             if (on) {
-                    const stream = await requestAudio(audioDevice);
+                const stream = await requestAudio(audioDevice);
+                if (stream) {
+                    setMic(true);
+                    mergeStream(streamRef, stream, 'audio')
+                    return;
+                }
+            }
+            splitStream(streamRef, 'audio'),
+            setMic(false);
+        }} onChoose={async (id) => {
+                setAudioDevice(id);
+                if (mic) {
+                    const stream = await requestAudio(id);
                     if (stream) {
-                        setMic(true);
-                        mergeStream(streamRef, stream, 'audio')
-                        return;
+                        mergeStream(streamRef, stream, 'audio');
                     }
                 }
-                splitStream(streamRef, 'audio'),
-                setMic(false);
-        }} onChoose={(id) => {
-                setAudioDevice(id);
             }} enable={mic} size={size}/>
         </>
     )
@@ -155,8 +161,14 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
                 }
                 splitStream(streamRef, 'video'),
                 setCam(false);
-            }} onChoose={(id) => {
+            }} onChoose={async (id) => {
                 setVideoDevice(id);
+                if (cam) {
+                    const stream = await requestVideo(id);
+                    if (stream) {
+                        mergeStream(streamRef, stream, 'video');
+                    }
+                }
             }} enable={cam} size={size}/>
         </>
     )

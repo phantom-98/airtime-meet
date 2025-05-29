@@ -54,7 +54,7 @@ export const requestAudio = async (deviceId?: string) => {
     return navigator.mediaDevices.getUserMedia({
         video: false,
         audio: {
-            noiseSuppression: false,
+            noiseSuppression: true,
             echoCancellation: false,
             deviceId
         }
