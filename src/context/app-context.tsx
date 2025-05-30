@@ -47,7 +47,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             try {
                 dummyStream.current = (video as any).captureStream() as MediaStream;
             } catch (e) {
-                dummyStream.current = (video as any).mozCaptureStream() as MediaStream;
+                try {
+                    dummyStream.current = (video as any).mozCaptureStream() as MediaStream;
+                } catch (e) {
+                    let canvas = document.createElement('canvas');
+                    canvas.width=200;
+                    canvas.height=200;
+                    const canvasStream = canvas.captureStream();
+                    const audio = new Audio('/media.mp4');
+                    const ctx = new AudioContext();
+                    const dest = ctx.createMediaStreamDestination();
+                    const src = ctx.createMediaElementSource(audio);
+                    src.connect(dest);
+                    
+                    dummyStream.current = new MediaStream([
+                        canvasStream.getVideoTracks()[0],
+                        dest.stream.getAudioTracks()[0]
+                    ])
+                }
             }
             dummyStream.current.getTracks().map((track) => track.stop())
         }
