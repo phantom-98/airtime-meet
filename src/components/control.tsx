@@ -93,7 +93,7 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
     const [settings, setSettings] = useState<SettingType>({
         autoGainControl: false,
         noiseSuppression: true,
-        echoCancellation: false
+        echoCancellation: true
     })
     
     const updateSetting = async () => {
@@ -112,6 +112,7 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
         local && setSettings(prev => ({...prev, ...JSON.parse(local)}))
     }, [])
     useEffect(() => {
+        localStorage.setItem('audio', JSON.stringify(settings));
         updateSetting();
     }, [settings])
     useEffect(() => {
@@ -154,7 +155,7 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
                 }
             }} onSetting={() => {
                 setOpen(true);
-            }} setting="Audio Settings" enable={mic} size={size}/>
+            }} setting={size === 'small' ? '':"Audio Settings"} enable={mic} size={size}/>
             {open && (
                 <SettingDialog isOpen={open} setOpen={setOpen} settings={settings} setSettings={setSettings}/>
             )}
