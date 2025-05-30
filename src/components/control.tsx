@@ -96,15 +96,23 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
         echoCancellation: false
     })
     
+    const updateSetting = async () => {
+        if (mic) {
+            const stream = await requestAudio(settings, audioDevice);
+            if (stream) {
+                setMic(true);
+                mergeStream(streamRef, stream, 'audio')
+                return;
+            }
+        }
+    }
     useEffect(() => {
         mic === undefined && checkPermission('microphone', setMic);
         const local = localStorage.getItem('audio')
         local && setSettings(prev => ({...prev, ...JSON.parse(local)}))
     }, [])
     useEffect(() => {
-        if (mic) {
-            streamRef.current?.getAudioTracks()[0].applyConstraints(settings);
-        }
+        updateSetting();
     }, [settings])
     useEffect(() => {
         if (mic && !micList) {
@@ -239,11 +247,10 @@ export type SettingType = {
 
 export const SettingDialog = ({setSettings, settings, isOpen, setOpen}: SettingProps) => {
     return <>
-        <div onClick={() => setOpen(false)} className="fixed top-0 left-0 bottom-0 right-0 flex items-center justify-center">
+        <div onClick={() => setOpen(false)} className="z-20 fixed top-0 left-0 bottom-0 right-0 flex items-center justify-center">
             <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-lg flex flex-col gap-4 p-12 shadow-2xl">
                 {Object.entries(settings).map(([key, value]) => {
-                    return <>
-                        <div className="flex items-center justify-between gap-8">
+                    return <div key={'setting_' + key} className="flex items-center justify-between gap-8">
                             <span className="text-xl">{key}</span>
                             <Switch value={value} onToggle={(value) => {
                                 setSettings(prev => {
@@ -252,7 +259,6 @@ export const SettingDialog = ({setSettings, settings, isOpen, setOpen}: SettingP
                                 })
                             }}/>
                         </div>
-                    </>
                 })}
 
             </div>
