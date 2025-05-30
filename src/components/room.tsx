@@ -185,7 +185,9 @@ const Room = () => {
                     <span>{link}</span> <span className={time ? 'inline-block' : 'hidden'}> | {time}</span>
                 </div>
 
-                <ControlBar />
+                <div className="absolute left-0 right-0 bottom-4 flex justify-center">
+                    <ControlBar />
+                </div>
             </div>
         </div>
     )

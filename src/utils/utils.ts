@@ -1,3 +1,4 @@
+import { SettingType } from "@/components/control";
 import { RefObject } from "react";
 
 
@@ -50,12 +51,11 @@ export const requestVideo = async (deviceId?: string) => {
     }).then(stream => stream).catch(err => null)
 }
 
-export const requestAudio = async (deviceId?: string) => {
+export const requestAudio = async (constraint: SettingType, deviceId?: string) => {
     return navigator.mediaDevices.getUserMedia({
         video: false,
         audio: {
-            noiseSuppression: true,
-            echoCancellation: false,
+            ...constraint,
             deviceId
         }
     }).then(stream => stream).catch(err => null)

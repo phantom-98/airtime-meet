@@ -9,10 +9,12 @@ import CamOffIcon from '@/assets/icons/cam-off.svg'
 import ShareIcon from '@/assets/icons/share.svg'
 import MessageIcon from '@/assets/icons/msg.svg'
 import EndIcon from '@/assets/icons/end.svg'
+import SettingIcon from '@/assets/icons/setting.svg'
 import Image from 'next/image';
-import React, { useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useAppContext } from "@/context/app-context";
 import { checkPermission, getDeviceList, mergeStream, requestAudio, requestVideo, splitStream } from "@/utils/utils";
+import Switch from "./switch";
 
 type OptionType = {
     value: string,
@@ -28,11 +30,13 @@ type ControlProps = {
         disabled: string | StaticImport
     },
     size: 'small' | 'large',
+    setting?: string,
+    onSetting?: () => void,
     onChoose?: (value: string) => void,
     onClick: (value: boolean) => void
 }
 
-const Control = React.memo(({contextMenu, defaultDevice, enable, icon, onChoose, onClick, size}: ControlProps) => {
+const Control = React.memo(({contextMenu, defaultDevice, enable, icon, onChoose, onClick, size, setting, onSetting}: ControlProps) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -52,10 +56,19 @@ const Control = React.memo(({contextMenu, defaultDevice, enable, icon, onChoose,
                         onChoose && onChoose(menu.value);
                         setOpen(false);
                     }} className="flex gap-2 px-4 py-2 cursor-pointer hover:bg-(--control-background-light)">
-                        <div className="w-5">{menu.value === defaultDevice && <Image src={CheckIcon} alt="c" className="w-4 aspect-square"/>}</div>
+                        <div className="w-4">{menu.value === defaultDevice && <Image src={CheckIcon} alt="c" className="w-4 aspect-square"/>}</div>
                         <div className="text-nowrap">{menu.label}</div>
                     </div>
                 ))}
+                {setting && onSetting && (
+                    <div onClick={() => {
+                        onSetting();
+                        setOpen(false);
+                    }} className="flex gap-2 px-4 py-2 cursor-pointer hover:bg-(--control-background-light) border-t border-gray-500">
+                        <Image src={SettingIcon} alt="c" className="w-4 aspect-square"/>
+                        <div className="text-nowrap">{setting}</div>
+                    </div>
+                )}
             </div>}
         </div>
     )
@@ -76,10 +89,23 @@ type MediaControlType = {
 export const MicControl = ({size = 'small'}: MediaControlType) => {
     const {streamRef, mic, setMic, audioDevice, setAudioDevice} = useAppContext()!;
     const [micList, setMicList] = useState<{value: string, label: string}[]>();
+    const [open, setOpen] = useState(false);
+    const [settings, setSettings] = useState<SettingType>({
+        autoGainControl: false,
+        noiseSuppression: true,
+        echoCancellation: false
+    })
     
     useEffect(() => {
         mic === undefined && checkPermission('microphone', setMic);
+        const local = localStorage.getItem('audio')
+        local && setSettings(prev => ({...prev, ...JSON.parse(local)}))
     }, [])
+    useEffect(() => {
+        if (mic) {
+            streamRef.current?.getAudioTracks()[0].applyConstraints(settings);
+        }
+    }, [settings])
     useEffect(() => {
         if (mic && !micList) {
             getDeviceList('audio')
@@ -97,28 +123,33 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
             contextMenu={micList}
             defaultDevice={audioDevice}
             icon={{
-            enabled: MicOnIcon,
-            disabled: MicOffIcon
-        }} onClick={async (on) => {
-            if (on) {
-                const stream = await requestAudio(audioDevice);
-                if (stream) {
-                    setMic(true);
-                    mergeStream(streamRef, stream, 'audio')
-                    return;
+                enabled: MicOnIcon,
+                disabled: MicOffIcon
+            }} onClick={async (on) => {
+                if (on) {
+                    const stream = await requestAudio(settings, audioDevice);
+                    if (stream) {
+                        setMic(true);
+                        mergeStream(streamRef, stream, 'audio')
+                        return;
+                    }
                 }
-            }
-            splitStream(streamRef, 'audio'),
-            setMic(false);
-        }} onChoose={async (id) => {
+                splitStream(streamRef, 'audio'),
+                setMic(false);
+            }} onChoose={async (id) => {
                 setAudioDevice(id);
                 if (mic) {
-                    const stream = await requestAudio(id);
+                    const stream = await requestAudio(settings, id);
                     if (stream) {
                         mergeStream(streamRef, stream, 'audio');
                     }
                 }
-            }} enable={mic} size={size}/>
+            }} onSetting={() => {
+                setOpen(true);
+            }} setting="Audio Settings" enable={mic} size={size}/>
+            {open && (
+                <SettingDialog isOpen={open} setOpen={setOpen} settings={settings} setSettings={setSettings}/>
+            )}
         </>
     )
 }
@@ -176,7 +207,7 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
 
 export const ControlBar = () => {
     return (
-        <div className="flex items-center gap-4 absolute left-1/2 -translate-x-1/2 bottom-4">
+        <div className="flex items-center gap-4">
             <MicControl size="large"/>
             <CamControl size="large" />
 
@@ -190,4 +221,41 @@ export const ControlBar = () => {
                 }} className='w-16 !bg-(--control-background-disabled-light)'/>
         </div>
     )
+}
+
+type SettingProps = {
+    isOpen: boolean,
+    setOpen: (value: boolean) => void,
+    settings: SettingType,
+    setSettings: Dispatch<SetStateAction<SettingType>>
+}
+
+
+export type SettingType = {
+    autoGainControl: boolean,
+    noiseSuppression: boolean,
+    echoCancellation: boolean
+}
+
+export const SettingDialog = ({setSettings, settings, isOpen, setOpen}: SettingProps) => {
+    return <>
+        <div onClick={() => setOpen(false)} className="fixed top-0 left-0 bottom-0 right-0 flex items-center justify-center">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-lg flex flex-col gap-4 p-12 shadow-2xl">
+                {Object.entries(settings).map(([key, value]) => {
+                    return <>
+                        <div className="flex items-center justify-between gap-8">
+                            <span className="text-xl">{key}</span>
+                            <Switch value={value} onToggle={(value) => {
+                                setSettings(prev => {
+                                    prev[key as keyof SettingType] = value;
+                                    return {...prev};
+                                })
+                            }}/>
+                        </div>
+                    </>
+                })}
+
+            </div>
+        </div>
+    </>
 }
