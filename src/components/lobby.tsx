@@ -13,6 +13,7 @@ type LobbyProps = {
     isCreate?: boolean
 }
 
+// lobby to prepare meeting
 const Lobby = ({isCreate = true}: LobbyProps) => {
     const router = useRouter();
     const [spinner, setSpinner] = useState(false)
@@ -25,20 +26,25 @@ const Lobby = ({isCreate = true}: LobbyProps) => {
         })
     }, [socketRef.current])
 
+    // check if the clients are connected successfully into socket.io/peerjs server
     const connected = useMemo(() => {
         return socketRef.current !== null && peerRef.current !== null;
     }, [socketRef.current, peerRef.current])
 
+    // move to room with link
     const onCreate = (link: string) => {
         setSpinner(false);
         router.push('/' + link, {scroll: true});
     }
 
+    // create room
     const createRoom = () => {
         setName(text);
         setSpinner(true);
         socketRef.current?.emit('create');
     }
+
+    // join room with name
     const joinRoom = () => {
         setName(text);
     }

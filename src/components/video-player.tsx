@@ -16,6 +16,7 @@ type VideoPlayerProps = {
     isMic: boolean,
 }
 
+// video player in meeting room
 const VideoPlayer = React.memo(({name, call, isLocal = true, isCam, isMic}: VideoPlayerProps) => {
     const { streamRef: localRef, getFullStream } = useAppContext()!;
     const stream = useRef<MediaStream | null>(null)
@@ -37,11 +38,9 @@ const VideoPlayer = React.memo(({name, call, isLocal = true, isCam, isMic}: Vide
                 </div>
             )}
             {!isMic ? (
-                // isLocal ? null : (
-                    <div className="absolute top-4 right-4 size-8 rounded-full muted flex items-center justify-center">
-                        <Image src={MutedIcon} alt="M" className="size-5"/>
-                    </div>
-                // )
+                <div className="absolute top-4 right-4 size-8 rounded-full muted flex items-center justify-center">
+                    <Image src={MutedIcon} alt="M" className="size-5"/>
+                </div>
             ) : <div className={`absolute ${(isCam) ? 'top-4 right-4' : 'top-1/2 left-1/2 -translate-1/2'} size-fit rounded-full`}>
                 <VoiceDetector stream={isLocal ? localRef.current : stream.current} size={(isCam) ? 'small' : 'large'}/>
                 {!isLocal && <Audio stream={stream.current} />}
@@ -53,6 +52,7 @@ const VideoPlayer = React.memo(({name, call, isLocal = true, isCam, isMic}: Vide
 
 export default VideoPlayer;
 
+// video and audio preview on lobby
 export const VideoPreview = () => {
     const { streamRef, cam, mic } = useAppContext()!;
     return (

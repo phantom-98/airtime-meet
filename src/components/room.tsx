@@ -7,11 +7,12 @@ import Brand from '@/assets/icons/brand.svg'
 import { useAppContext } from "@/context/app-context";
 import VideoLayout, { UserType } from "./video-layout";
 
+// meeting room
 const Room = () => {
-    const link = usePathname().slice(1);
+    const link = usePathname().slice(1);                                        // meeting link
     const [time, setTime] = useState('');
     const { cam, mic, name, streamRef, socketRef, peerRef, getEmptyTrack, getFullStream } = useAppContext()!;
-    const mediaState = useRef({cam, mic});
+    const mediaState = useRef({cam, mic});                                      // local media status
     const [users, setUsers] = useState<{[key: string]: UserType}>({
         'local': {
             name,
@@ -19,13 +20,13 @@ const Room = () => {
             isCam: !!cam,
             isMic: !!mic
         },
-    });
+    });                                                                         // store the peer user list
     
-
+    // get the user list in the room when a user just join the meeting
     const onJoin = (list: {name: string, peerId: string}[]) => {
         setUsers(prev => {
             list.map(user => {
-                const call = peerRef.current!.call(user.peerId, getFullStream())
+                const call = peerRef.current!.call(user.peerId, getFullStream())    // calling to all users with the local stream
                 prev[user.peerId] = {name: user.name, call, isCam: false, isMic: false}
             })
             return {...prev};
@@ -34,8 +35,10 @@ const Room = () => {
         setTimeout(() => {
             socketRef.current!.emit('cam', peerRef.current!.id, !!mediaState.current.cam);
             socketRef.current!.emit('mic', peerRef.current!.id, !!mediaState.current.mic);
-        }, 1000)
+        }, 1000)                                                                // broadcast local media status - delay is needed because it takes some time to establish peer connection
     }
+
+    // get a new user info who just join the meeting
     const onAdd = (name: string, peerId: string) => {
         setUsers(prev => {
             prev[peerId] = {name, call: null, isCam: false, isMic: false};
@@ -47,24 +50,32 @@ const Room = () => {
             socketRef.current!.emit('mic', peerRef.current!.id, !!mediaState.current.mic);
         }, 1000)
     }
+
+    // remove a user who left meeting
     const onLeft = (peerId: string) => {
         setUsers(prev => {
             delete prev[peerId];
             return {...prev};
         })
     }
+
+    // update remote camera status
     const onCam = (peerId: string, value: boolean) => {
         setUsers(prev => {
             prev[peerId].isCam = value;
             return {...prev}
         })
     }
+
+    // update remote microphone status
     const onMic = (peerId: string, value: boolean) => {
         setUsers(prev => {
             prev[peerId].isMic = value;
             return {...prev}
         })
     }
+
+    // send new tracks through peer connection list
     const startTracks = (tracks: {[key: string]: MediaStreamTrack}, videoOrAudio: ('video' | 'audio')[]) => {
         setUsers(prev => {
             Object.keys(prev).filter(key => key !== 'local').forEach(peerId => {
@@ -72,7 +83,7 @@ const Room = () => {
                     videoOrAudio.forEach(media => {
                         const sender = prev[peerId].call!.peerConnection.getSenders().find((s: any) => s.track?.kind === media);
                         if (sender) {
-                            sender.replaceTrack(tracks[media]);
+                            sender.replaceTrack(tracks[media]);                         // replace the track
                         }
                     })
                 } else {
@@ -91,6 +102,7 @@ const Room = () => {
             return {...prev};
         })
     }
+    // stop track through peer connection list
     const stopTracks = (videoOrAudio: ('video' | 'audio')[]) => {
         setUsers(prev => {
             Object.keys(prev).filter(key => key !== 'local').forEach(peerId => {
@@ -105,6 +117,7 @@ const Room = () => {
         })
     }
 
+    // update camera status
     useEffect(() => {
         if (cam === true) {
             startTracks({
@@ -121,6 +134,7 @@ const Room = () => {
         mediaState.current.cam = cam;
     }, [cam])
 
+    // update microphone status
     useEffect(() => {
         if (mic === true) {
             startTracks({

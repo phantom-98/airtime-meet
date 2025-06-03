@@ -12,6 +12,7 @@ export type UserType = {
     isMic: boolean,
 }
 
+// grid layout for the meeting room
 const VideoLayout = ({users}: {users: {[key: string]: UserType}}) => {
     const grid = useMemo(() => {
         return calculateGrid(Object.keys(users).length);

@@ -7,6 +7,7 @@ type ButtonProps = {
     onClick: () => void,
 }
 
+// action button in lobby
 const Button = ({text, spinner = false, disabled, onClick}: ButtonProps) => {
     return (
         <button onClick={onClick} disabled={disabled} className="w-60 h-14 cursor-pointer rounded-full transition-all duration-200 ease-in-out text-lg font-bold flex items-center justify-center button">

@@ -36,6 +36,7 @@ type ControlProps = {
     onClick: (value: boolean) => void
 }
 
+// control button for microphone and camera
 const Control = React.memo(({contextMenu, defaultDevice, enable, icon, onChoose, onClick, size, setting, onSetting}: ControlProps) => {
     const [open, setOpen] = useState(false);
 
@@ -101,18 +102,18 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
             const stream = await requestAudio(settings, audioDevice);
             if (stream) {
                 setMic(true);
-                mergeStream(streamRef, stream, 'audio')
+                mergeStream(streamRef, stream, 'audio')                                         // update audio track with new setting
                 return;
             }
         }
     }
     useEffect(() => {
         mic === undefined && checkPermission('microphone', setMic);
-        const local = localStorage.getItem('audio')
+        const local = localStorage.getItem('audio')                                             // restore audio setting
         local && setSettings(prev => ({...prev, ...JSON.parse(local)}))
     }, [])
     useEffect(() => {
-        localStorage.setItem('audio', JSON.stringify(settings));
+        localStorage.setItem('audio', JSON.stringify(settings));                                // save audio setting
         updateSetting();
     }, [settings])
     useEffect(() => {
@@ -123,7 +124,7 @@ export const MicControl = ({size = 'small'}: MediaControlType) => {
                         setAudioDevice(list[0].deviceId)
                     }
                     setMicList(list?.map(info => ({value: info.deviceId, label: info.label})) || undefined)
-                })
+                })                                                                              // get microphone list
         }
     }, [mic])
     return (
@@ -168,7 +169,7 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
     const [camList, setCamList] = useState<{value: string, label: string}[]>();
     
     useEffect(() => {
-        cam === undefined && checkPermission('camera', setCam);
+        cam === undefined && checkPermission('camera', setCam);                         // check permission
     }, [])
     useEffect(() => {
         if (cam && !camList) {
@@ -178,7 +179,7 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
                         setVideoDevice(list[0].deviceId)
                     }
                     setCamList(list?.map(info => ({value: info.deviceId, label: info.label})) || undefined)
-                })
+                })                                                                      // get camera list
         }
     }, [cam])
 
@@ -214,6 +215,7 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
     )
 }
 
+// control bar in meeting room
 export const ControlBar = () => {
     return (
         <div className="flex items-center gap-4">
@@ -246,6 +248,7 @@ export type SettingType = {
     echoCancellation: boolean
 }
 
+// audio setting dialog
 export const SettingDialog = ({setSettings, settings, isOpen, setOpen}: SettingProps) => {
     return <>
         <div onClick={() => setOpen(false)} className="z-20 fixed top-0 left-0 bottom-0 right-0 flex items-center justify-center">

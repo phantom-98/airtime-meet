@@ -5,6 +5,7 @@ type InputProps = {
     onChange: (text: string) => void
 }
 
+// input name
 const Input = ({text, onChange}: InputProps) => {
     return (
         <div className="w-fit relative">

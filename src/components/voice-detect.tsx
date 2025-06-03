@@ -12,6 +12,7 @@ type VoiceDetectorProps = {
     stream?: MediaStream | null
 }
 
+// voice detector from a media stream
 const VoiceDetector = ({dotCount = 3, size = 'small', startOnLoad = true, onSpeechEnd, onSpeechStart, stream}: VoiceDetectorProps) => {
     const [loading, setLoading] = useState(false);
     useMicVAD({

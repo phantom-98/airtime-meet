@@ -5,21 +5,21 @@ import { io, Socket } from "socket.io-client";
 import { v4 } from "uuid";
 
 type AppContextType = {
-    name: string,
+    name: string,                                                       // User name
     setName: Dispatch<SetStateAction<string>>,
-    mic: boolean | undefined,
+    mic: boolean | undefined,                                           // Microphone status - true(on), false(off), undefined(permission not granted)
     setMic: Dispatch<SetStateAction<boolean | undefined>>,
-    cam: boolean | undefined,
+    cam: boolean | undefined,                                           // Camera status - true(on), false(off), undefined(permission not granted)
     setCam: Dispatch<SetStateAction<boolean | undefined>>,
-    audioDevice: string,
+    audioDevice: string,                                                // Active audio device id
     setAudioDevice: Dispatch<SetStateAction<string>>,
-    videoDevice: string,
+    videoDevice: string,                                                // Active video device id
     setVideoDevice: Dispatch<SetStateAction<string>>,
-    streamRef: RefObject<MediaStream | null>,
-    socketRef: RefObject<Socket | null>,
-    peerRef: RefObject<Peer | null>,
-    getEmptyTrack: (videoOrAudio: string) => MediaStreamTrack,
-    getFullStream: () => MediaStream
+    streamRef: RefObject<MediaStream | null>,                           // Local video and audio stream
+    socketRef: RefObject<Socket | null>,                                // Socket.io client instance
+    peerRef: RefObject<Peer | null>,                                    // PeerJs client instance
+    getEmptyTrack: (videoOrAudio: string) => MediaStreamTrack,          // Return an empty media stream track
+    getFullStream: () => MediaStream                                    // Return local video and audio tracks
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -39,18 +39,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [audioDevice, setAudioDevice] = useState<string>('default');
     const [videoDevice, setVideoDevice] = useState<string>('default');
     const dummyStream = useRef<MediaStream | null>(null);
-    const genDummyStream = async () => {
+
+    /* 
+        peerjs doesn't support addtrack event on webrtc.
+        it means that once the connection established, we can't add new media stream tracks.
+        local stream may have not video or audio track at first. then the peer connection
+        is established, we need to add new tracks but peerjs doesn't support it. it support
+        only replacing track function. That's why the loadDummyStream comes in. When the 
+        peer connection is establishing, we need to have both video and audio track 
+        even they are empty. Then we can replace the tracks with what we add to local stream.
+    */
+    const loadDummyStream = async () => {
         let video = document.createElement("video");
         video.src = '/media.mp4';
         video.controls = true;
         video.oncanplaythrough = (e) => {
             try {
-                dummyStream.current = (video as any).captureStream() as MediaStream;
+                dummyStream.current = (video as any).captureStream() as MediaStream;            // for chrome
             } catch (e) {
                 try {
-                    dummyStream.current = (video as any).mozCaptureStream() as MediaStream;
+                    dummyStream.current = (video as any).mozCaptureStream() as MediaStream;     // for firefox
                 } catch (e) {
-                    let canvas = document.createElement('canvas');
+                    let canvas = document.createElement('canvas');                              // for safari
                     canvas.width=200;
                     canvas.height=200;
                     const canvasStream = canvas.captureStream();
@@ -70,6 +80,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
+    // return empty video or audio track from dummy stream
     const getEmptyTrack = (videoOrAudio: string) => {
         if (videoOrAudio === "video") {
             return dummyStream.current!.getVideoTracks()[0]
@@ -78,6 +89,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
+    // return mediastream which has both video and audio tracks
     const getFullStream = () => {
         return new MediaStream([
             streamRef.current?.getVideoTracks()[0] || getEmptyTrack('video'),
@@ -87,12 +99,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         if (!socketRef.current || socketRef.current.disconnected) {
-            socketRef.current = io(socket_host)
+            socketRef.current = io(socket_host)                             // connect socket.io server
         }
         if (!peerRef.current || peerRef.current.disconnected) {
-            peerRef.current = new Peer(v4(), {host: peer_host, port: parseInt(peer_port), secure: Boolean(peer_secure)})
+            peerRef.current = new Peer(
+                v4(), {
+                    host: peer_host, 
+                    port: parseInt(peer_port), 
+                    secure: Boolean(peer_secure)
+                }
+            )                                                               // connect peerjs server
         }
-        genDummyStream();
+        loadDummyStream();
     }, [])
 
     return <AppContext.Provider value={{
