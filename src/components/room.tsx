@@ -120,8 +120,8 @@ const Room = () => {
     // update camera status
     useEffect(() => {
         if (cam === true) {
-            startTracks({
-                video: streamRef.current!.getVideoTracks()[0]
+            streamRef.current && startTracks({
+                video: streamRef.current.getVideoTracks()[0]
             }, ['video']);
         } else if (cam === false) {
             stopTracks(['video']);

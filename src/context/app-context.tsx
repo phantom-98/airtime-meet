@@ -83,9 +83,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // return empty video or audio track from dummy stream
     const getEmptyTrack = (videoOrAudio: string) => {
         if (videoOrAudio === "video") {
-            return dummyStream.current!.getVideoTracks()[0]
+            return dummyStream.current!.getVideoTracks()[0].clone()
         } else {
-            return dummyStream.current!.getAudioTracks()[0]
+            return dummyStream.current!.getAudioTracks()[0].clone()
         }
     }
 
@@ -98,6 +98,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     useEffect(() => {
+        loadDummyStream();
         if (!socketRef.current || socketRef.current.disconnected) {
             socketRef.current = io(socket_host)                             // connect socket.io server
         }
@@ -110,7 +111,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 }
             )                                                               // connect peerjs server
         }
-        loadDummyStream();
     }, [])
 
     return <AppContext.Provider value={{
