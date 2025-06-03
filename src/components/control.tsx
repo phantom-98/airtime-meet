@@ -77,9 +77,10 @@ const Control = React.memo(({contextMenu, defaultDevice, enable, icon, onChoose,
 
 export default Control;
 
-const ControlButton = ({icon, onClick, className = ''}: {icon: string | StaticImport, onClick: () => void, className?: string}) => {
-    return <div onClick={onClick} className={`flex items-center justify-center size-12 cursor-pointer rounded-full bg-(--control-background-light) ${className}`}>
+const ControlButton = ({icon, onClick, balloon = false, className = ''}: {icon: string | StaticImport, onClick: () => void, balloon?: boolean, className?: string}) => {
+    return <div onClick={onClick} className={`relative flex items-center justify-center size-12 cursor-pointer rounded-full bg-(--control-background-light) ${className}`}>
             <Image src={icon} alt='m' className='aspect-square w-6'/>
+            {balloon && <i className="absolute bg-red-400 top-2 right-2 rounded-full size-3"></i>}
         </div>
 }
 
@@ -217,6 +218,7 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
 
 // control bar in meeting room
 export const ControlBar = () => {
+    const { msg, setMsg, setShowChat } = useAppContext()!;
     return (
         <div className="flex items-center gap-4">
             <MicControl size="large"/>
@@ -225,6 +227,10 @@ export const ControlBar = () => {
             <ControlButton icon={ShareIcon} onClick={() => {
                     navigator.clipboard.writeText(window.location.href)
                 }} />
+            <ControlButton icon={MessageIcon} onClick={() => {
+                    setShowChat(prev => !prev);
+                    setMsg(false);
+                }} balloon={msg}/>
             
             <ControlButton icon={EndIcon} onClick={() => {
                     window.location.href = '/';

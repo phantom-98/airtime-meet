@@ -11,6 +11,10 @@ type AppContextType = {
     setMic: Dispatch<SetStateAction<boolean | undefined>>,
     cam: boolean | undefined,                                           // Camera status - true(on), false(off), undefined(permission not granted)
     setCam: Dispatch<SetStateAction<boolean | undefined>>,
+    showChat: boolean,                                                  // Show chat box
+    setShowChat: Dispatch<SetStateAction<boolean>>
+    msg: boolean,                                                       // alert new msg arrived
+    setMsg: Dispatch<SetStateAction<boolean>>,
     audioDevice: string,                                                // Active audio device id
     setAudioDevice: Dispatch<SetStateAction<string>>,
     videoDevice: string,                                                // Active video device id
@@ -33,6 +37,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [name, setName] = useState('');
     const [mic, setMic] = useState<boolean>();
     const [cam, setCam] = useState<boolean>();
+    const [showChat, setShowChat] = useState(false);
+    const [msg, setMsg] = useState(false);
     const streamRef = useRef<MediaStream>(null);
     const socketRef = useRef<Socket>(null)
     const peerRef = useRef<Peer>(null);
@@ -107,7 +113,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 v4(), {
                     host: peer_host, 
                     port: parseInt(peer_port), 
-                    secure: Boolean(peer_secure)
+                    secure: peer_secure === 'true'
                 }
             )                                                               // connect peerjs server
         }
@@ -116,7 +122,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return <AppContext.Provider value={{
         name, setName, 
         mic, setMic, 
-        cam, setCam, 
+        cam, setCam,
+        showChat, setShowChat,
+        msg, setMsg,
         audioDevice, setAudioDevice, 
         videoDevice, setVideoDevice, 
         streamRef,
