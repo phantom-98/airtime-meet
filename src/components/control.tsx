@@ -10,6 +10,7 @@ import ShareIcon from '@/assets/icons/share.svg'
 import MessageIcon from '@/assets/icons/msg.svg'
 import EndIcon from '@/assets/icons/end.svg'
 import SettingIcon from '@/assets/icons/setting.svg'
+import AnimatedCheck from '@/assets/icons/animated-check.svg'
 import Image from 'next/image';
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useAppContext } from "@/context/app-context";
@@ -219,13 +220,16 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
 // control bar in meeting room
 export const ControlBar = () => {
     const { msg, setMsg, setShowChat } = useAppContext()!;
+    const [copied, setCopied] = useState(false);
     return (
         <div className="flex items-center gap-4">
             <MicControl size="large"/>
             <CamControl size="large" />
 
-            <ControlButton icon={ShareIcon} onClick={() => {
+            <ControlButton icon={copied ? AnimatedCheck : ShareIcon} onClick={() => {
                     navigator.clipboard.writeText(window.location.href)
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 3000);
                 }} />
             <ControlButton icon={MessageIcon} onClick={() => {
                     setShowChat(prev => !prev);
