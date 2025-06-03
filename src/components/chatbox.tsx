@@ -46,7 +46,7 @@ const ChatBox = () => {
     }, [])
     return (
         <>
-        <div className={`h-full w-sm bg-white rounded-xl flex-col p-4 ${showChat ? 'flex' : 'hidden'}`}>
+        <div className={`h-full text-black w-sm bg-white rounded-xl flex-col p-4 ${showChat ? 'flex' : 'hidden'}`}>
             <div className="flex justify-end mb-2"><span onClick={() => setShowChat(false)} className="font-semibold cursor-pointer text-2xl text-gray-400">✕</span></div>
             <div className="flex-1 overflow-auto">
                 <div className="flex flex-col gap-2">
