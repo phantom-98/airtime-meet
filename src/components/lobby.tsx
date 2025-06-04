@@ -64,7 +64,7 @@ const Lobby = ({isCreate = true}: LobbyProps) => {
                     <Input text={text} onChange={setText}/>
                     <Button text={isCreate ? "Create Room" : "Join Room"} spinner={spinner} disabled={!text || !connected || spinner} onClick={isCreate ? createRoom : joinRoom}/>
                 </div>
-                <Image src={Brand} alt="airtime" className="w-md max-w-3/5 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 lg:mb-10"/>
+                <Image src={Brand} alt="airtime" className="w-xs max-w-3/5 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 lg:mb-10"/>
             </div>
         </div>
     )
