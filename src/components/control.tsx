@@ -171,7 +171,8 @@ export const CamControl = ({size = 'small'}: MediaControlType) => {
     const [camList, setCamList] = useState<{value: string, label: string}[]>();
     
     useEffect(() => {
-        cam === undefined && checkPermission('camera', setCam);                         // check permission
+        if (cam !== undefined) return;
+        checkPermission('camera', setCam);                         // check permission
         requestVideo(videoDevice)
             .then(stream => {
                 if (stream) {

@@ -6,8 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import { VideoPreview } from "./video-player"
 import { CamControl, MicControl } from "./control"
 import { useAppContext } from "@/context/app-context"
-import Image from "next/image"
-import Brand from '@/assets/icons/brand.svg';
+import Logo from "./logo"
 
 type LobbyProps = {
     isCreate?: boolean
@@ -64,7 +63,7 @@ const Lobby = ({isCreate = true}: LobbyProps) => {
                     <Input text={text} onChange={setText}/>
                     <Button text={isCreate ? "Create Room" : "Join Room"} spinner={spinner} disabled={!text || !connected || spinner} onClick={isCreate ? createRoom : joinRoom}/>
                 </div>
-                <Image src={Brand} alt="airtime" className="w-xs max-w-3/5 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 lg:mb-10"/>
+                <Logo className="w-xs max-w-3/5 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 lg:mb-10"/>
             </div>
         </div>
     )

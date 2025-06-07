@@ -2,11 +2,10 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ControlBar } from "./control";
-import Image from "next/image";
-import Brand from '@/assets/icons/brand.svg'
 import { useAppContext } from "@/context/app-context";
 import VideoLayout, { UserType } from "./video-layout";
 import ChatBox from "./chatbox";
+import Logo from "./logo";
 
 // meeting room
 const Room = () => {
@@ -192,7 +191,7 @@ const Room = () => {
     return (
         <div className="w-screen h-screen bg-(--room-background) flex justify-between">
             <div className="flex-1 h-full flex flex-col justify-between">
-                <Image src={Brand} alt="Airtime" className="w-52 my-2 mx-4"/>
+                <Logo className="w-52 my-2 mx-4 text-[0.65rem]"/>
                 <div className="w-full h-[calc(100vh-9rem)]">
                     <VideoLayout users={users}/>
                 </div>
